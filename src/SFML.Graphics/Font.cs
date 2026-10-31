@@ -146,6 +146,24 @@ public class Font : ObjectBase
 
     ////////////////////////////////////////////////////////////
     /// <summary>
+    /// Get the ascent of a font
+    /// </summary>
+    /// <param name="characterSize">Reference character size</param>
+    /// <returns>Ascent, in pixels</returns>
+    ////////////////////////////////////////////////////////////
+    public float GetAscent(uint characterSize) => sfFont_getAscent(CPointer, characterSize);
+
+    ////////////////////////////////////////////////////////////
+    /// <summary>
+    /// Get the descent of a font
+    /// </summary>
+    /// <param name="characterSize">Reference character size</param>
+    /// <returns>Descent, in pixels</returns>
+    ////////////////////////////////////////////////////////////
+    public float GetDescent(uint characterSize) => sfFont_getDescent(CPointer, characterSize);
+
+    ////////////////////////////////////////////////////////////
+    /// <summary>
     /// Get the position of the underline
     /// </summary>
     /// <param name="characterSize">Character size</param>
@@ -208,7 +226,10 @@ public class Font : ObjectBase
         var data = sfFont_getInfo(CPointer);
         var info = new Info
         {
-            Family = Marshal.PtrToStringAnsi(data.Family)
+            Family = Marshal.PtrToStringAnsi(data.Family),
+            HasKerning = data.HasKerning,
+            HasVerticalMetrics = data.HasVerticalMetrics,
+            Id = data.Id
         };
 
         return info;
@@ -265,8 +286,17 @@ public class Font : ObjectBase
     ////////////////////////////////////////////////////////////
     public struct Info
     {
+        /// <summary> A unique id that indentifies the font </summary>
+        public ulong Id;
+
         /// <summary>The font family</summary>
         public string Family;
+
+        /// <summary> Has Kerning Information </summary>
+        public bool HasKerning;
+
+        /// <summary> Has native vertical metrics </summary>
+        public bool HasVerticalMetrics;
     }
 
     ////////////////////////////////////////////////////////////
@@ -276,9 +306,14 @@ public class Font : ObjectBase
     /// </summary>
     ////////////////////////////////////////////////////////////
     [StructLayout(LayoutKind.Sequential)]
-    internal struct InfoMarshalData
+    private struct InfoMarshalData
     {
+        public ulong Id;
         public IntPtr Family;
+        [MarshalAs(UnmanagedType.I1)]
+        public bool HasKerning;
+        [MarshalAs(UnmanagedType.I1)]
+        public bool HasVerticalMetrics;
     }
 
     private readonly Dictionary<uint, Texture> _textures = [];
@@ -335,5 +370,11 @@ public class Font : ObjectBase
 
     [DllImport(CSFML.Graphics, CallingConvention = CallingConvention.Cdecl), SuppressUnmanagedCodeSecurity]
     private static extern InfoMarshalData sfFont_getInfo(IntPtr cPointer);
+
+    [DllImport(CSFML.Graphics, CallingConvention = CallingConvention.Cdecl), SuppressUnmanagedCodeSecurity]
+    private static extern float sfFont_getAscent(IntPtr cPointer, uint characterSize);
+
+    [DllImport(CSFML.Graphics, CallingConvention = CallingConvention.Cdecl), SuppressUnmanagedCodeSecurity]
+    private static extern float sfFont_getDescent(IntPtr cPointer, uint characterSize);
     #endregion
 }
